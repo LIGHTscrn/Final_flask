@@ -20,4 +20,9 @@ def pincode():
         return render_template('result.html' , pincode = pincode)
     return render_template('pincode.html')
 
+@app.route("/dog")
+def dog():
+    request = requests.get("https://dog.ceo/api/breeds/image/random");
+    print(request.json())
+    return render_template('dog.html')
 Flask.run(app)
