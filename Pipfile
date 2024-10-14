@@ -6,6 +6,9 @@ name = "pypi"
 [packages]
 flask = "*"
 requests = "*"
+cs50 = "*"
+flask-login = "*"
+flask-session = "*"
 
 [dev-packages]
 

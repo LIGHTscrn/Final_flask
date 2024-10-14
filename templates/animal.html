@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .image-container {
+        display: inline-block;
+        text-align: center;
+        margin: 10px;
+    }
+    .image-container img {
+        max-width: 100%;
+        height: auto;
+    }
+    .container3 {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+</style>
+<div class="container container3"></div>
+<div class="image-container">
+    <img src="{{ cat_url }}" alt="Animal 1" width="300" height="300">
+    <button class = "btn btn-primary" name = "cat_button">Pick</button>
+</div>
+<div class="image-container">
+    <img src="{{ dog_url }}" alt="Animal 2" width="300" height="300">
+    <button class="btn btn-primary" name ="dog_button">Pick</button>
+</div>
+{% endblock %}
