@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+    <h1 style="text-align: center; color: #333;">Face Swap</h1>
+    <form action="{{ url_for('faceswap') }}" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
+        <div style="display: flex; flex-direction: column;">
+            <label for="image1" style="margin-bottom: 5px; color: #555;">Upload First Image:</label>
+            <input type="file" name="image1" required style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+        <div style="display: flex; flex-direction: column;">
+            <label for="image2" style="margin-bottom: 5px; color: #555;">Upload Second Image:</label>
+            <input type="file" name="image2" required style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+        <button type="submit" style="padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Swap Faces</button>
+    </form>
+    {% if image %}
+    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+        <h2 style="text-align: center; color: #333;">Result</h2>
+        <img src="data:image/png;base64,{{ image }}" alt="Result" style="max-width: 100%; height: auto;">
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

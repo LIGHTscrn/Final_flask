@@ -19,11 +19,29 @@
 </style>
 <div class="container container3"></div>
 <div class="image-container">
-    <img src="{{ cat_url }}" alt="Animal 1" width="300" height="300">
-    <button class = "btn btn-primary" name = "cat_button">Pick</button>
-</div>
-<div class="image-container">
-    <img src="{{ dog_url }}" alt="Animal 2" width="300" height="300">
-    <button class="btn btn-primary" name ="dog_button">Pick</button>
+    <h1 class="styled-header">{{person_type}}</h1>
+    <style>
+        .styled-header {
+            font-family: 'Arial', sans-serif;
+            font-size: 2.5em;
+            color: #953;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <h1>Choose your favorite animal</h1>
+    <form method="post" action="/cat_button">
+        <div class="image-container">
+            <img src="{{ cat_url }}" alt="Animal 1" width="300" height="300">
+            <button class="btn btn-primary" name="cat_button">Pick</button>
+        </div>
+        </form>
+    <form method="post" action="/dog_button">
+        <div class="image-container">
+            <img src="{{ dog_url }}" alt="Animal 2" width="300" height="300">
+            <button class="btn btn-primary" name="dog_button">Pick</button>
+        </div>
+    </form>
 </div>
 {% endblock %}
