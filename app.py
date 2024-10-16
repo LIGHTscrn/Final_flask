@@ -5,6 +5,8 @@ import sqlite3
 import requests
 from datetime import timedelta
 
+from faceswap import face_swap
+
 
 app = Flask(__name__)
 
@@ -198,21 +200,27 @@ def dog_button():
 @app.route("/faceswap", methods=["GET","POST"])
 @login_required
 def faceswap():
+
+    swapped_image_path = None
+
     if request.method == "POST":
         image1 = request.files["image1"]
         image2 = request.files["image2"]
 
-        image1_path = f"temp_{current_user.id}_1.jpg"
-        image2_path = f"temp_{current_user.id}_2.jpg"
+        image1_path = f"static/images/temp_{current_user.id}_1.jpeg"
+        image2_path = f"static/images/temp_{current_user.id}_2.jpeg"
         image1.save(image1_path)
         image2.save(image2_path)
 
-        swapped_image = swap_faces(image1_path, image2_path)
+        swapped_image = face_swap(image1_path, image2_path)
+        if swapped_image == None:
+            text = "No face detected in one of the images"
+            return render_template("faceswap.html", text=text)
+        swapped_image_path = f"static/images/swapped_{current_user.id}.jpeg"
+        swapped_image.save(swapped_image_path)
 
-        swapped_image.save(f"swapped_{current_user.id}.jpg")
-
-        return redirect(url_for('faceswap', user_id = current_user.id))
-    return render_template("faceswap.html")
+        return render_template("faceswap.html", swapped_image =swapped_image_path)
+    return render_template("faceswap.html", swapped_image =swapped_image_path)
     
 
 if __name__ == '__main__':

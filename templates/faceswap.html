@@ -1,24 +1,44 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container" style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-    <h1 style="text-align: center; color: #333;">Face Swap</h1>
-    <form action="{{ url_for('faceswap') }}" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
-        <div style="display: flex; flex-direction: column;">
-            <label for="image1" style="margin-bottom: 5px; color: #555;">Upload First Image:</label>
-            <input type="file" name="image1" required style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Face Swap</h1>
+    <form method="post" enctype="multipart/form-data" class="text-center">
+        <div class="form-group">
+            <label for="image1" class="btn btn-secondary">Upload Image 1</label>
+            <input type="file" name="image1" id="image1" class="form-control-file" required onchange="previewImage(event, 'image1')" style="display: none;">
+            <img id="image1-preview" src="#" alt="Image 1 Preview" class="img-thumbnail mt-2" style="display:none; max-width: 200px; max-height: 200px;">
         </div>
-        <div style="display: flex; flex-direction: column;">
-            <label for="image2" style="margin-bottom: 5px; color: #555;">Upload Second Image:</label>
-            <input type="file" name="image2" required style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        <div class="form-group">
+            <label for="image2" class="btn btn-secondary">Upload Image 2</label>
+            <input type="file" name="image2" id="image2" class="form-control-file" required onchange="previewImage(event, 'image2')" style="display: none;">
+            <img id="image2-preview" src="#" alt="Image 2 Preview" class="img-thumbnail mt-2" style="display:none; max-width: 200px; max-height: 200px;">
         </div>
-        <button type="submit" style="padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Swap Faces</button>
+        <button type="submit" class="btn btn-primary mt-3">Swap Faces</button>
     </form>
-    {% if image %}
-    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
-        <h2 style="text-align: center; color: #333;">Result</h2>
-        <img src="data:image/png;base64,{{ image }}" alt="Result" style="max-width: 100%; height: auto;">
+
+    {% if swapped_image %}
+    <div class="mt-5 text-center">
+        <h2>Swapped Image:</h2>
+        <img src="{{ swapped_image }}" alt="Swapped Image" class="img-fluid">
+    </div>
+    {% endif %}
+    {% if text %}
+    <div class="mt-3 text-center">
+        <h2>{{ text }}</h2>
     </div>
     {% endif %}
 </div>
+
+<script>
+function previewImage(event, inputId) {
+    var reader = new FileReader();
+    reader.onload = function(){
+        var output = document.getElementById(inputId + '-preview');
+        output.src = reader.result;
+        output.style.display = 'block';
+    };
+    reader.readAsDataURL(event.target.files[0]);
+}
+</script>
 {% endblock %}
