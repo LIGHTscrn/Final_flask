@@ -109,6 +109,7 @@ def index():
     return render_template('index.html', image_link=image_link)
 
 @app.route("/animal")
+@login_required
 def animal():
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
@@ -125,12 +126,24 @@ def animal():
     conn.close()
     cat_counts = cat_counts[0]
     dog_counts = dog_counts[0]
+    person_type = "You are a person"
     if cat_counts > dog_counts:
-        person_type = "You are a cat person"
+        difference = cat_counts - dog_counts
+        if difference >= 1 and difference <= 3:
+            person_type = "You like cats"
+        elif difference >=4 and difference <= 6:
+            person_type = "You really like cats"
+        elif difference > 6:
+            person_type = "You love cats"
+
     elif cat_counts < dog_counts:
-        person_type = "You are a dog person"
-    else:
-        person_type = "You are a person"
+        difference = dog_counts - cat_counts
+        if difference >= 1 and difference <= 3:
+            person_type = "You like dogs"
+        elif difference >=4 and difference <= 6:
+            person_type = "You really like dogs"
+        elif difference > 6:
+            person_type = "You love dogs"
 
     cat_response = requests.get("https://api.thecatapi.com/v1/images/search")
     cat_url = cat_response.json()[0]['url']

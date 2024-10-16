@@ -9,6 +9,7 @@ requests = "*"
 cs50 = "*"
 flask-login = "*"
 flask-session = "*"
+ipykernal = "*"
 
 [dev-packages]
 
