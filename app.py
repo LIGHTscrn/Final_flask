@@ -4,8 +4,7 @@ from flask_session import Session
 import sqlite3
 import requests
 from datetime import timedelta
-import speech_recognition as sr
-from faceswap import face_swap
+from helpers import face_swap
 
 app = Flask(__name__)
 
@@ -23,13 +22,11 @@ Session(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    conn = sqlite3.connect("users.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    user = c.fetchone()
-    conn.close()
+    with get_db_connection() as c:
+        user = c.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     if user:
-        return User(id = user[0] , username = user[1] , password = user[2])
+        print(user)
+        return User(id = user["id"] , username = user["username"] , password = user["password"])
     return None
 class User(UserMixin):
     def __init__(self, id , username , password):
@@ -43,18 +40,18 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = sqlite3.connect("users.db")
+        conn = get_db_connection()
+        if not conn:
+            return render_template("login.html", message = "dataase connection error")
+        
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
-        user = c.fetchone()
+        user =  c.fetchone() 
         conn.close()
-        print(user,"this is user")
 
-        if user and user[2] == password:
-            login_user(User(id=user[0] , username=user[1] , password=user[2]))
-
+        if user and user["password"] == password:
+            login_user(User(id=user["id"] , username=user["username"] , password=user["password"]))
             session.permanent = False
-
             flash("Logged in")
             return redirect(url_for("index"))
         else:
@@ -68,7 +65,9 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = sqlite3.connect("users.db")
+        conn = get_db_connection()
+        if not conn:
+            return render_template("register.html", message = "dataase connection error")
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE username = ?", (username,))
         user = c.fetchone()
@@ -103,11 +102,15 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
+def get_db_connection():
+    c = sqlite3.connect("users.db")
+    c.row_factory = sqlite3.Row
+    return c
+
 
 @app.route('/')
 def index():
-    image_link = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBxy4oqcKwCuv8h1xZlIdBFgbfKdQeseq9AQ&s"
-    return render_template('index.html', image_link=image_link)
+    return render_template('index.html')
 
 @app.route("/animal")
 @login_required
@@ -216,24 +219,11 @@ def faceswap():
 
         return render_template("faceswap.html", swapped_image =swapped_image_path)
     return render_template("faceswap.html", swapped_image =swapped_image_path)
-    
-def voice_search():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Listening...")
-        audio = recognizer.listen(source)
-        try:
-            query = recognizer.recognize_google(audio)
-            return query
-        except sr.UnknownValueError:
-            return "Sorry, I did not get that"
-        except sr.RequestError:
-            return "Could not request results from Google Speech Recognition service."
-
-@app.route("/voice_search")
-def voice_search_route():
-    query = voice_search()
-    return jsonify(result=query)
-
+  
+  
+@app.route("/finance/index", methods=["GET","POST"])
+@login_required
+def finance_index():
+    return render_template("finance_index.html")
 if __name__ == '__main__':
     app.run(debug=False)

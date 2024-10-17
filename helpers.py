@@ -1,15 +1,25 @@
+import os
 import cv2
 import numpy as np
 import dlib
 import requests
 from PIL import Image
+import urllib
+import uuid
+import datetime
+from flask import request
+import csv
+import pytz
 
-# Download the shape predictor model if not already present
-url = 'https://github.com/tzutalin/dlib-android/raw/master/data/shape_predictor_68_face_landmarks.dat'
-response = requests.get(url)
-
-with open('shape_predictor_68_face_landmarks.dat', 'wb') as file:
-    file.write(response.content)
+# Check if the shape predictor model exists and download if necessary
+model_path = 'shape_predictor_68_face_landmarks.dat'
+if not os.path.exists(model_path):
+    print(f"Downloading {model_path}...")
+    url = 'https://github.com/tzutalin/dlib-android/raw/master/data/shape_predictor_68_face_landmarks.dat'
+    response = requests.get(url)
+    with open(model_path, 'wb') as file:
+        file.write(response.content)
+    print(f"{model_path} downloaded.")
 
 def extract_index_nparray(nparray):
     index = None
@@ -19,12 +29,15 @@ def extract_index_nparray(nparray):
     return index
 
 def face_swap(image1_url, image2_url):
-    try:# Load and resize images
-        print(image1_url , image2_url,"The image urls")
-        image1 = Image.open(image1_url)
+    try:
+        # Load and resize images
+        print(image1_url, image2_url, "The image URLs")
+        
+        # Load images using requests
+        image1 = Image.open(requests.get(image1_url, stream=True).raw)
         image1 = image1.resize((300, 300))
         
-        image2 = Image.open(image2_url)
+        image2 = Image.open(requests.get(image2_url, stream=True).raw)
         image2 = image2.resize((300, 300))
 
         img = np.array(image1)
@@ -35,7 +48,7 @@ def face_swap(image1_url, image2_url):
 
         # Initialize dlib's face detector and shape predictor
         detector = dlib.get_frontal_face_detector()
-        predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+        predictor = dlib.shape_predictor(model_path)
         
         height, width, channels = img2.shape
         img2_new_face = np.zeros((height, width, channels), np.uint8)
@@ -117,12 +130,6 @@ def face_swap(image1_url, image2_url):
 
             cv2.fillConvexPoly(cropped_tr1_mask, points, 255)
 
-            # Lines space
-            cv2.line(lines_space_mask, tr1_pt1, tr1_pt2, 255)
-            cv2.line(lines_space_mask, tr1_pt2, tr1_pt3, 255)
-            cv2.line(lines_space_mask, tr1_pt1, tr1_pt3, 255)
-            lines_space = cv2.bitwise_and(img, img, mask=lines_space_mask)
-
             # Triangulation of second face
             tr2_pt1 = landmarks_points2[triangle_index[0]]
             tr2_pt2 = landmarks_points2[triangle_index[1]]
@@ -137,8 +144,6 @@ def face_swap(image1_url, image2_url):
             points2 = np.array([[tr2_pt1[0] - x, tr2_pt1[1] - y],
                                 [tr2_pt2[0] - x, tr2_pt2[1] - y],
                                 [tr2_pt3[0] - x, tr2_pt3[1] - y]], np.int32)
-
-            cv2.fillConvexPoly(cropped_tr2_mask, points2, 255)
 
             # Warp triangles
             points = np.float32(points)
@@ -172,9 +177,31 @@ def face_swap(image1_url, image2_url):
 
         return swapped_image_array
     except Exception as e:
+        print(f"An error occurred: {e}")
         return None
-if __name__ == "__main__":
-    image1_url = 'https://www.ceruleanmedical.com/wp-content/uploads/2023/12/How-Facial-Fat-Aging-Can-Make-Your-Face-Look-Older-in-Kelowna-BC-300x300.jpeg'
-    image2_url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSx8Pu1tW1uCiZPfj9K1EL6uHxbg3bOKO9XkA&usqp=CAU'
-    result = face_swap(image1_url, image2_url)
-    Image.fromarray(result).show()
+    
+def lookup(symbol):
+    symbol = symbol.upper()
+    end = datetime.datetime.now(pytz.timezone("US/Eastern"))
+    start = end - datetime.timedelta(days=7)
+
+    url = (
+        f"https://query1.finance.yahoo.com/v7/finance/download/{urllib.parse.quote_plus(symbol)}"
+        f"?period1={int(start.timestamp())}"
+        f"&period2={int(end.timestamp())}"
+        f"&interval=1d&events=history&includeAdjustedClose=true"
+    )
+
+    try:
+        response = requests.get(
+            url,
+            cookies={"session": str(uuid.uuid4())},
+            headers={"Accept": "*/*", "User-Agent": request.headers.get("User-Agent")},
+        )
+        response.raise_for_status()
+        quotes = list(csv.DictReader(response.content.decode("utf-8").splitlines()))
+
+        return quotes
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None

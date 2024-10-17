@@ -1,11 +1,27 @@
 {% extends "layout.html" %}
 {% block content %}
-<div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
-    <a href="/animal"><img src="{{ url_for('static', filename='images/animal.jpg') }}" alt="Image 1" width="80%" height="auto"></a>
-    <a href="/faceswap"><img src="{{ url_for('static', filename='images/face.webp') }}" alt="Image 2" width="80%" height="auto"></a>
-    <a href="/"><img src="{{ url_for('static', filename='images/image3.jpg') }}" alt="Image 3" width="80%" height="auto"></a>
-    <a href="#"><img src="{{ url_for('static', filename='images/image4.jpg') }}" alt="Image 4" width="80%" height="auto"></a>
-    <a href="#"><img src="{{ url_for('static', filename='images/image5.jpg') }}" alt="Image 5" width="80%" height="auto"></a>
-    <a href="#"><img src="{{ url_for('static', filename='images/image6.jpg') }}" alt="Image 6" width="80%" height="auto"></a>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="d-flex flex-column gap-4 align-items-center">
+                <div class="text-center mb-4">
+                    <a href="/animal"><img src="{{ url_for('static', filename='images/animal.jpg') }}" alt="Image 1" class="img-fluid"></a>
+                    <a href="/animal" class="btn btn-primary mt-2" title="Choose your favourite animal">Cat or Dog? Click Me!</a>
+                </div>
+                <div class="text-center mb-4">
+                    <a href="/faceswap"><img src="{{ url_for('static', filename='images/face.webp') }}" alt="Image 2" class="img-fluid"></a>
+                    <a href="/faceswap" class="btn btn-primary mt-2" title="Go to Face Swap">Swap Faces</a>
+                </div>
+                <div class="text-center mb-4">
+                    <a href="/finance-profile"><img src="{{ url_for('static', filename='images/finance.jpeg') }}" alt="Image 3" class="img-fluid"></a>
+                    <a href="/finance-profile" class="btn btn-primary mt-2" title="Go Home">Check your Finance</a>
+                    <a href="#" class="btn btn-primary mt-2" title="Go to Image 4">Buy Stock</a>
+                    <a href="#" class="btn btn-primary mt-2" title="Go to Image 5">Sell Stock</a>
+                    <a href="#" class="btn btn-primary mt-2" title="Go to Image 5">Check Stock</a>
+                    <a href="#" class="btn btn-primary mt-2" title="Go to Image 6">History</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
