@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h1>Finance Lookup</h1>
+    <form action="/finance_lookup" method="post">
+        <div>
+            <label for="query">Search:</label>
+            <input type="text" id="query" name="quote">
+        </div>
+        <div>
+            <button type="submit">Search</button>
+        </div>
+    </form>
+    {% if price %}
+        <h2>Symbol: {{ symbol }}</h2>
+        <h2>Price: {{ price }}</h2>
+    {% endif %}
+    {% if error %}
+        <p>{{ error }}</p>
+    {% endif %}
+{% endblock %}
