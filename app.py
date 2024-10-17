@@ -226,106 +226,35 @@ def faceswap():
 def finance_buy():
     if request.method == "POST":
         symbol = request.form.get("symbol")
-        shares = request.form.get("shares")
-
-        # Validate symbol
-        if not symbol:
-            return render_template("finance_buy.html", error="Enter a valid symbol")
+        shares = int(request.form.get("shares"))
+        # Add logic to buy stocks
+        # For example, deduct cash, add shares to user's portfolio, etc.
+        # Assuming a function buy_stock exists
+        success, message = buy_stock(current_user.id, symbol, shares)
+        if success:
+            return render_template("finance_buy.html", success=message)
         else:
-            stock = lookup(symbol)
-            if not stock:
-                return render_template("finance_buy.html", error="Enter a valid symbol")
-        
-        # Validate shares
-        if not shares:
-            return render_template("finance_buy.html", error="Enter a valid number of shares")
-        
-        try:
-            number = int(shares)
-            if number <= 0:
-                return render_template("finance_buy.html", error="Enter a valid number of shares")
-        except ValueError:
-            return render_template("finance_buy.html", error="Enter a valid number of shares")
+            return render_template("finance_buy.html", error=message)
+    return render_template("finance_buy.html")
 
-        # Calculate the total amount to spend
-        amount = number * float(stock["price"])
-
-        conn = get_db_connection()
-        if not conn:
-            return render_template("finance_buy.html", error="Database connection error")
-        
-        try:
-            c = conn.cursor()
-
-            # Get the user's current cash amount
-            c.execute("SELECT cash FROM users WHERE id = ?", (current_user.id,))
-            current_amount = c.fetchone()
-
-            if not current_amount or current_amount["cash"] < amount:
-                conn.close()
-                return render_template("finance_buy.html", error="Not enough cash")
-
-            updated_amount = current_amount["cash"] - amount
-
-            # Update the user's cash balance
-            c.execute("UPDATE users SET cash = ? WHERE id = ?", (updated_amount, current_user.id))
-
-            # Get the username for logging the transaction
-            c.execute("SELECT username FROM users WHERE id = ?", (current_user.id,))
-            username = c.fetchone()
-
-            # Insert the transaction into the history table
-            c.execute(
-                "INSERT INTO history (id, username, stock, shares) VALUES (?, ?, ?, ?)",
-                (current_user.id, username["username"], stock["symbol"], number)
-            )
-
-            # Commit the changes
-            conn.commit()
-
-        except sqlite3.Error as e:
-            conn.rollback()
-            return render_template("finance_buy.html", error="Transaction failed: " + str(e))
-
-        finally:
-            conn.close()
-
-        return redirect("/")
-    
-    else:
-        return render_template("finance_buy.html")
-
-    
-
-@app.route("/finance_lookup" , methods=["GET","POST"])
+@app.route("/finance_lookup", methods=["GET", "POST"])
 @login_required
 def finance_lookup():
     if request.method == "POST":
-        symbol = None
-        price = None
-        stock = request.form.get("quote")
-        if stock and stock.isalpha():
-            data = lookup(symbol=stock)
-            if data:
-                symbol = data["symbol"]
-                price = data["price"]
-                return render_template("finance_lookup.html", symbol=symbol,price = price)
-            else:
-                return render_template("finance_lookup.html", error = "Quote not found")
-        else:
-            error = "Quote not found"
-            return render_template("finance_lookup.html", error = error)
+        symbol = request.form.get("symbol")
+        # Add logic to look up stock information
+        # For example, use yfinance to get stock data
+        stock_info = yf.Ticker(symbol).info
+        return render_template("finance_lookup.html", stock_info=stock_info)
     return render_template("finance_lookup.html")
 
 @app.route("/finance_profile", methods=["GET", "POST"])
 @login_required
 def finance_profile():
-    # Fetch any necessary data from the database
+    # Fetch user's financial profile
     user_cash = db.execute("SELECT cash FROM users WHERE id = ?", current_user.id)
-    user_transactions = db.execute("SELECT * FROM history WHERE id = ?", current_user.id)
-
-    # Render the finance index template with the fetched data
-    return render_template("finance_profile.html", cash=user_cash[0]["cash"], transactions=user_transactions)
+    user_portfolio = db.execute("SELECT * FROM portfolio WHERE user_id = ?", current_user.id)
+    return render_template("finance_profile.html", cash=user_cash[0]["cash"], portfolio=user_portfolio)
 
 if __name__ == '__main__':
     app.run(debug=True)

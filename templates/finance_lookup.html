@@ -1,21 +1,24 @@
 {% extends "layout.html" %}
-
 {% block content %}
-    <h1>Finance Lookup</h1>
-    <form action="/finance_lookup" method="post">
-        <div>
-            <label for="query">Search:</label>
-            <input type="text" id="query" name="quote">
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Look Up Stock</h1>
+    <form method="post" class="text-center">
+        <div class="form-group">
+            <label for="symbol">Stock Symbol</label>
+            <input type="text" name="symbol" id="symbol" class="form-control" required>
         </div>
-        <div>
-            <button type="submit">Search</button>
-        </div>
+        <button type="submit" class="btn btn-primary mt-3">Look Up</button>
     </form>
-    {% if price %}
-        <h2>Symbol: {{ symbol }}</h2>
-        <h2>Price: {{ price }}</h2>
+    {% if stock_info %}
+    <div class="mt-5">
+        <h2>Stock Information for {{ stock_info['symbol'] }}</h2>
+        <ul class="list-group">
+            <li class="list-group-item">Name: {{ stock_info['longName'] }}</li>
+            <li class="list-group-item">Price: ${{ stock_info['regularMarketPrice'] }}</li>
+            <li class="list-group-item">Market Cap: ${{ stock_info['marketCap'] }}</li>
+            <!-- Add more stock information as needed -->
+        </ul>
+    </div>
     {% endif %}
-    {% if error %}
-        <p>{{ error }}</p>
-    {% endif %}
+</div>
 {% endblock %}

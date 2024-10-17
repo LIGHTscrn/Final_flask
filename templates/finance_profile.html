@@ -1,10 +1,24 @@
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <h1>welcome</h1>
-  </body>
-</html>
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Finance Profile</h1>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Current Cash Balance</h5>
+            <p class="card-text">${{ cash }}</p>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Portfolio</h5>
+            <ul class="list-group">
+                {% for stock in portfolio %}
+                <li class="list-group-item">
+                    {{ stock["symbol"] }}: {{ stock["shares"] }} shares
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

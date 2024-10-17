@@ -1,18 +1,23 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h1>Finance Buy</h1>
-    <form action="/finance_profile" method="post">
-        <label for="textInput">Buy Stock</label>
-        <input type="text" id="textInput" name="symbol" required>
-        <label for="numberInput">Amount</label>
-        <input type="number" id="numberInput" name="shares" required min="1">
-        <button type="submit">Buy</button>
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Buy Stocks</h1>
+    <form method="post" class="text-center">
+        <div class="form-group">
+            <label for="symbol">Stock Symbol</label>
+            <input type="text" name="symbol" id="symbol" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="shares">Number of Shares</label>
+            <input type="number" name="shares" id="shares" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Buy</button>
     </form>
-{% if success %}
-    <p>{{ success }}</p>
-{% elif error %}
-    <p>{{ error }}</p>
-{% endif %}
-
+    {% if success %}
+    <div class="alert alert-success mt-3">{{ success }}</div>
+    {% elif error %}
+    <div class="alert alert-danger mt-3">{{ error }}</div>
+    {% endif %}
+</div>
 {% endblock %}
