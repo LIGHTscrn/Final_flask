@@ -4,7 +4,7 @@ from flask_session import Session
 import sqlite3
 import requests
 from datetime import timedelta
-from helpers import face_swap
+from helpers import face_swap , lookup
 
 app = Flask(__name__)
 
@@ -221,9 +221,11 @@ def faceswap():
     return render_template("faceswap.html", swapped_image =swapped_image_path)
   
   
-@app.route("/finance/index", methods=["GET","POST"])
+@app.route("/finance_profile", methods=["GET","POST"])
 @login_required
-def finance_index():
-    return render_template("finance_index.html")
+def finance_profile():
+    print(lookup("AMD"))
+    return render_template("finance_profile.html")
+
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
