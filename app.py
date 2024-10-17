@@ -1,12 +1,11 @@
-from flask import Flask ,flash, render_template , redirect , url_for , request, session
+from flask import Flask ,flash, jsonify, render_template , redirect , url_for , request, session
 from flask_login import UserMixin, LoginManager, login_required,login_user,logout_user, current_user
 from flask_session import Session
 import sqlite3
 import requests
 from datetime import timedelta
-
+import speech_recognition as sr
 from faceswap import face_swap
-
 
 app = Flask(__name__)
 
@@ -126,24 +125,30 @@ def animal():
     cat_counts = c.execute("SELECT cat FROM animal_counts WHERE id = ?", (current_user.id,)).fetchone()
     dog_counts = c.execute("SELECT dog FROM animal_counts WHERE id = ?", (current_user.id,)).fetchone()
     conn.close()
-    cat_counts = cat_counts[0]
-    dog_counts = dog_counts[0]
+    cat_counts = cat_counts[0] if cat_counts is not None else 0
+    dog_counts = dog_counts[0] if dog_counts is not None else 0
     person_type = "You are a person"
     if cat_counts > dog_counts:
         difference = cat_counts - dog_counts
+
         if difference >= 1 and difference <= 3:
             person_type = "You like cats"
+
         elif difference >=4 and difference <= 6:
             person_type = "You really like cats"
+
         elif difference > 6:
             person_type = "You love cats"
 
     elif cat_counts < dog_counts:
         difference = dog_counts - cat_counts
+
         if difference >= 1 and difference <= 3:
             person_type = "You like dogs"
+
         elif difference >=4 and difference <= 6:
             person_type = "You really like dogs"
+
         elif difference > 6:
             person_type = "You love dogs"
 
@@ -177,16 +182,6 @@ def dog_button():
         return redirect(url_for("login"))
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
-    
-    c.execute("""
-              CREATE TABLE IF NOT EXISTS animal_counts (
-              id INTEGER PRIMARY KEY,
-              cat INTEGER DEFAULT 0,
-              dog INTEGER DEFAULT 0, 
-              FOREIGN KEY (id) REFERENCES users(id)
-              )
-                """)
-
     c.execute("""
        INSERT INTO animal_counts (id, dog) VALUES (? , 1) 
        ON CONFLICT(id) DO UPDATE SET dog = dog + 1
@@ -222,6 +217,23 @@ def faceswap():
         return render_template("faceswap.html", swapped_image =swapped_image_path)
     return render_template("faceswap.html", swapped_image =swapped_image_path)
     
+def voice_search():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        audio = recognizer.listen(source)
+        try:
+            query = recognizer.recognize_google(audio)
+            return query
+        except sr.UnknownValueError:
+            return "Sorry, I did not get that"
+        except sr.RequestError:
+            return "Could not request results from Google Speech Recognition service."
+
+@app.route("/voice_search")
+def voice_search_route():
+    query = voice_search()
+    return jsonify(result=query)
 
 if __name__ == '__main__':
     app.run(debug=False)
