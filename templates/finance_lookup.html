@@ -9,14 +9,11 @@
         </div>
         <button type="submit" class="btn btn-primary mt-3">Look Up</button>
     </form>
-    {% if stock_info %}
+    {% if name %}
     <div class="mt-5">
-        <h2>Stock Information for {{ stock_info['symbol'] }}</h2>
+        <h2>Stock Information for {{ name }}</h2>
         <ul class="list-group">
-            <li class="list-group-item">Name: {{ stock_info['longName'] }}</li>
-            <li class="list-group-item">Price: ${{ stock_info['regularMarketPrice'] }}</li>
-            <li class="list-group-item">Market Cap: ${{ stock_info['marketCap'] }}</li>
-            <!-- Add more stock information as needed -->
+            <li>stock price: {{price}}</li>
         </ul>
     </div>
     {% endif %}

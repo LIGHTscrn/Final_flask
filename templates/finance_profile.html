@@ -1,24 +1,30 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center mb-4">Finance Profile</h1>
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Current Cash Balance</h5>
-            <p class="card-text">${{ cash }}</p>
-        </div>
-    </div>
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Portfolio</h5>
-            <ul class="list-group">
-                {% for stock in portfolio %}
-                <li class="list-group-item">
-                    {{ stock["symbol"] }}: {{ stock["shares"] }} shares
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
+
+<div class="row bg-dark">
+    <div class="col-4 bg-light">Symbol</div>
+    <div class="col-4 bg-light">Shares</div>
+    <div class="col-2 bg-light">Price</div>
+    <div class="col-2 bg-light">TOTAL</div>
 </div>
+
+{% for price in processed_price %}
+<div class="row bg-dark">
+    <div class="col-4 bg-light">{{ price.symbol }}</div>
+    <div class="col-4 bg-light">{{ price.number }}</div>
+    <div class="col-2 bg-light">{{ price.price }}</div>
+    <div class="col-2 bg-light">{{ price.total }}</div>
+</div>
+{% endfor %}
+<div class = "row pt-3">
+    <div class = "col-8"></div>
+    <div class = "col-2">CASH</div>
+    <div class = "col-2">{{ user_cash }}</div>
+</div>
+<div class = "row pt-3">
+    <div class = "col-8"></div>
+    <div class = "col-2">TOTAL</div>
+    <div class = "col-2">{{ final }}</div>
+</div>
+
 {% endblock %}

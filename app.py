@@ -226,35 +226,100 @@ def faceswap():
 def finance_buy():
     if request.method == "POST":
         symbol = request.form.get("symbol")
-        shares = int(request.form.get("shares"))
-        # Add logic to buy stocks
-        # For example, deduct cash, add shares to user's portfolio, etc.
-        # Assuming a function buy_stock exists
-        success, message = buy_stock(current_user.id, symbol, shares)
-        if success:
-            return render_template("finance_buy.html", success=message)
-        else:
-            return render_template("finance_buy.html", error=message)
-    return render_template("finance_buy.html")
+        number = request.form.get("shares")
+        number = int(number)
+        conn = sqlite3.connect("users.db")
+        c = conn.cursor()
+        c.execute("INSERT INTO finance (user_id, stock, shares) VALUES (?, ?, ?)", (current_user.id, symbol, number))
+        conn.commit()
+        c.execute("INSERT INTO history (user_id, stock, shares) VALUES (?, ?, ?)", (current_user.id, symbol, number))
 
+        stock = lookup(symbol)
+        price = float(stock["price"])
+        total_price = number * price
+
+        c.execute("SELECT cash FROM users WHERE id = ?", (current_user.id,))
+        user_cash = c.fetchone()
+        print(user_cash)
+        user_cash = float(user_cash[0])
+        if user_cash < total_price:
+            return render_template("finance_buy.htl", error ="out of cash")  
+
+        final_price = user_cash - total_price
+        c.execute("UPDATE users SET cash = ? WHERE id = ?", (final_price, current_user.id))
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for("finance_profile"))
+    return render_template("finance_buy.html")
 @app.route("/finance_lookup", methods=["GET", "POST"])
 @login_required
 def finance_lookup():
     if request.method == "POST":
         symbol = request.form.get("symbol")
-        # Add logic to look up stock information
-        # For example, use yfinance to get stock data
-        stock_info = yf.Ticker(symbol).info
-        return render_template("finance_lookup.html", stock_info=stock_info)
+        stock = lookup(symbol)
+        stock_name = stock["name"]
+        stock_price = float(stock["price"])
+        return render_template("finance_lookup.html",name = stock_name, price = stock_price)
     return render_template("finance_lookup.html")
 
 @app.route("/finance_profile", methods=["GET", "POST"])
 @login_required
 def finance_profile():
-    # Fetch user's financial profile
-    user_cash = db.execute("SELECT cash FROM users WHERE id = ?", current_user.id)
-    user_portfolio = db.execute("SELECT * FROM portfolio WHERE user_id = ?", current_user.id)
-    return render_template("finance_profile.html", cash=user_cash[0]["cash"], portfolio=user_portfolio)
+    total_price = 0
+    processed_price = []
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT cash FROM users WHERE id = ?", (current_user.id,))
+    user_cash = c.fetchone()
+    print(user_cash["cash"], "This is user_cash")
+    user_cash = int(user_cash["cash"])
 
+    c.execute("SELECT stock , SUM(shares) FROM finance WHERE user_id = ? GROUP BY shares ORDER BY shares ASC", (current_user.id,))
+    shares = c.fetchall()
+    for share in shares:
+        symbol = lookup(share["stock"])
+        share_name = symbol["name"]
+        share_price = symbol["price"]
+        count = share["SUM(shares)"]
+        final_price = int(count) * int(share_price)
+        processed_price.append({
+            "price":share_price,
+            "symbol": share_name,
+            "number": count,
+            "total": final_price,
+        })
+
+    for i in processed_price:
+        total_price = total_price + i["total"]
+    final = user_cash + total_price
+    return render_template("finance_profile.html", processed_price = processed_price , user_cash = user_cash, final = final)
+
+
+@app.route("/finance_history")
+@login_required
+def finance_history():
+    money = []
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+
+    c.execute(
+        "SELECT * FROM history WHERE user_id = ?", (current_user.id,)
+    )
+    history = c.fetchone()
+    for hist in history:
+        data = lookup(hist["symbol"])
+        symbol = data["name"]
+        price = float(data["price"])
+        number = float(hist["number"])
+        amount = float(number * price)
+
+        money.append(
+            {"symbol": symbol, "number": number, "amount": amount}
+        )
+
+    return render_template("history.html", money=money)
 if __name__ == '__main__':
     app.run(debug=True)
