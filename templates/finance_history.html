@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<table class = "table">
+    <thead>
+        <tr>
+            <th>username</th>
+            <th>Symbol</th>
+            <th>number of shares</th>
+            <th>amount</th>
+        </tr>
+    </thead>
+    <tbody>
+       {% for hist in history %}
+       <tr>
+            <td>{{ hist.username }}</td>
+            <td>{{ hist.stock }}</td>
+            <td>{{ hist.shares }}</td>
+            <td>{{ hist.price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

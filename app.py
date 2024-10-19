@@ -228,13 +228,16 @@ def finance_buy():
         symbol = request.form.get("symbol")
         number = request.form.get("number")
 
-        if number <= 0:
-            return render_template("finance_buy.html", message="Please enter a valid number")
-        
-        if symbol == "":
+        try:
+            number = float(number)
+        except ValueError:
+            return render_template("finance_buy.html", message="Please enter a valid")
+
+        if not symbol:
             return render_template("finance_buy.html", message="Please enter a symbol")
+        
         stock = lookup(symbol)
-        if stock == None:
+        if stock is None:
             return render_template("finance_buy.html", message="Invalid symbol")
         
         stock_name = stock["name"]
@@ -246,16 +249,16 @@ def finance_buy():
         c.execute("""
                   SELECT cash FROM users WHERE id = ? 
                   """, (current_user.id,))
-        user_cash = c.fetchone()
-        user_cash = user_cash["cash"]
+        user_cash = c.fetchone()["cash"]
 
-        total_price_of_stocks = stock_price * float(number)
+        total_price_of_stocks = stock_price * number
+
         if user_cash < total_price_of_stocks:
             return render_template("finance_buy.html", message="Not enough cash")
         
         c.execute("""
                      CREATE TABLE IF NOT EXISTS history (
-                        id INTEGER PRIMARY KEY,
+                        id INTEGER NOT NULL,
                         username TEXT NOT NULL,
                         stock TEXT NOT NULL,
                         shares INTEGER NOT NULL,
@@ -282,12 +285,15 @@ def finance_buy():
                     """)
         conn.commit()
 
-        c.execute(""" UPDATE TABLE stocks SET shares = shares + ? WHERE username = ? AND stock = ? """, (number, current_user.username, stock_name))
+        c.execute(""" UPDATE stocks SET shares = shares + ? WHERE username = ? AND stock = ? """, (number, current_user.username, stock_name))
+        
+        if(c.rowcount == 0):
+            c.execute(""" INSERT INTO stocks (id , username, stock , shares) VALUES (? , ? , ? , ?) """, (current_user.id , current_user.username , stock_name , number))
         conn.commit()    
 
         conn.close()
                      
-        return render_template("finance_buy.html")
+        return render_template("finance_buy.html", message = "Stock bought successfully")
     return render_template("finance_buy.html")
 
 @app.route("/finance_lookup", methods=["GET", "POST"])
@@ -310,7 +316,18 @@ def finance_profile():
 @app.route("/finance_history")
 @login_required
 def finance_history():
-    pass
+
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("""
+                SELECT * FROM history WHERE id = ?
+                """, (current_user.id,))
+    history = c.fetchall()
+    conn.close()
+
+    history = [dict(row) for row in history]
+    return render_template("finance_history.html", history = history)
 
 if __name__ == '__main__':
     app.run(debug=True)
