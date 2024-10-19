@@ -24,7 +24,6 @@ This is a Flask-based web application designed for managing financial transactio
 - Bootstrap for responsive design
 
 ## Installation
-
 1. Navigate to the project directory:
    cd Final_flask 
 
