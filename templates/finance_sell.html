@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<form action="/finance_sell" class="row" method="post">
+<div class="row pt-4">
+    <select class=" col-4" name="symbol">
+        <option class = "text-center" disabled selected value="">Symbol</option>
+        {% for stock in stocks %}
+    <option value = "{{ stock.stock }}">{{ stock.stock }}</option>
+        {% endfor %}
+    </select>
+    <input class=" col-4" type="number" name="shares" value = 0 min="0" >
+    <button class="col-4 btn btn-primary" type="submit">SELL</button>
+</div>
+</form>
+{% if message %}
+<div class="alert alert-primary" role="alert">
+    {{ message }}
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between mt-4">
+    <a href="/finance_profile" class="btn btn-secondary">Check Profile</a>
+    <a href="/finance_buy" class="btn btn-secondary">Buy more Shares</a>
+</div>
+{% endblock %}

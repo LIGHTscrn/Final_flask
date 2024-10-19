@@ -277,7 +277,7 @@ def finance_buy():
 
         c.execute("""
                      CREATE TABLE IF NOT EXISTS stocks (
-                        id INTEGER PRIMARY KEY,
+                        id INTEGER NOT NULL,
                         username TEXT NOT NULL,
                         stock TEXT NOT NULL,
                         shares INTEGER NOT NULL
@@ -310,13 +310,102 @@ def finance_lookup():
 @app.route("/finance_profile", methods=["GET", "POST"])
 @login_required
 def finance_profile():
-    return render_template("finance_profile.html")
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("""
+                SELECT * FROM stocks WHERE id = ?
+                """, (current_user.id,))
+    stocks = c.fetchall()
+    stocks = [dict(row) for row in stocks]
 
+    c.execute("""
+                SELECT cash FROM users WHERE id = ?
+                """, (current_user.id,))
+    user_cash = float(c.fetchone()["cash"])
+    processed_stocks = []
+    for stock in stocks:
+        stock_name = stock["stock"]
+        stock_price = float(lookup(stock_name)["price"])
+        total = float(stock["shares"]) * stock_price
+        processed_stocks.append({"stock": stock_name, "shares": stock["shares"], "price": stock_price , "total": total})
+        
+
+    conn.close()
+
+    total = user_cash + sum([stock["total"] for stock in processed_stocks])
+    return render_template("finance_profile.html",processed_stocks=processed_stocks, user_cash = user_cash, total = total)
+
+@app.route("/finance_sell", methods=["GET", "POST"])
+@login_required
+def sell():
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    db = conn.cursor()
+    db.execute(
+        "SELECT * FROM stocks WHERE id = ?", (current_user.id,)
+    )
+    stocks = db.fetchall()
+    stocks = [dict(row) for row in stocks]
+    print(stocks)
+
+    if request.method == "POST":
+
+        number = float(request.form.get("shares"))
+        if not number or number < 0:
+            return render_template("finance_sell.html", stocks = stocks, message="Invalid number")
+
+        symbol = request.form.get("symbol")
+        if not symbol:
+            return render_template("finance_sell.html", stocks=stocks, message="Invalid symbol")
+
+        share = lookup(symbol)
+        symbol = share["name"]
+        price = float(share["price"])
+        current_numberofShares = 0
+        if share is None:
+            return render_template("finance_sell.html", stocks = stocks, message="Invalid symbol")
+        for stock in stocks:
+            if stock["stock"] == symbol:
+                current_numberofShares = stock["shares"]
+                if stock["shares"] < number:
+                    return render_template("finance_sell.html", stocks = stocks, message="Not enough shares")
+                
+        total = number * price
+
+        db.execute(
+            "SELECT cash FROM users WHERE id = ?", (current_user.id,)
+        )
+        user_cash = db.fetchall()
+        user_cash =[dict(row) for row in user_cash]
+        user_cash = float(user_cash[0]["cash"])
+        final_price = user_cash + total
+        remaining_shares = current_numberofShares - number
+        if remaining_shares < 0:
+            return render_template("finance_sell.html", stocks = stocks, message="Not enough shares")
+        new_total = remaining_shares * price
+
+        db.execute(
+            "UPDATE users SET cash = ? WHERE id = ?", (final_price, current_user.id)
+        )
+        db.execute(
+            "INSERT INTO history (id , username , stock , shares, price) VALUES (? ,? ,? ,?,?)",
+            (current_user.id,current_user.username,symbol,remaining_shares,new_total)
+        )
+        
+        db.execute("""
+                   UPDATE stocks SET shares = ? WHERE id = ? AND stock = ?
+                   """,
+                     (remaining_shares, current_user.id, symbol)
+                     )
+        conn.commit()
+        conn.close()
+        return render_template("finance_sell.html", stocks = stocks, message="Stock sold successfully")
+    return render_template("finance_sell.html", stocks = stocks)
 
 @app.route("/finance_history")
 @login_required
 def finance_history():
-
     conn = sqlite3.connect("users.db")
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
