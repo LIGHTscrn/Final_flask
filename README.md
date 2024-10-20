@@ -9,7 +9,8 @@ contains files to be submitted as final project
 This is a Flask-based web application designed for managing financial transactions, including buying and selling stocks. Users can register, log in, view their stock portfolio, and execute buy and sell transactions.
 
 ## Features
-
+- FaceSwap between two images(jpeg)
+- Cat vs Dog Selection
 - User authentication (registration, login, and logout)
 - View current cash balance and stock holdings
 - Buy stocks using available cash
